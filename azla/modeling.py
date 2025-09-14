@@ -37,7 +37,7 @@ class ModelManager:
         quant_args = {}
         if self.quant4:
             quant_args = {
-                "load_in_4bit": True,
+                # "load_in_4bit": True,
                 "quantization_config": BitsAndBytesConfig(
                     load_in_4bit=True,
                     bnb_4bit_use_double_quant=True,
