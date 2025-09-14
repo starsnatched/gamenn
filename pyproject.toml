@@ -1,10 +1,14 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "azla-mcts"
 version = "0.1.0"
 description = "AlphaZero-Latent Agreement MCTS with TRL PPO and LoRA for Gemma"
 readme = "README.md"
 requires-python = ">=3.9"
-license = {text = "MIT"}
+license = "MIT"
 authors = [{name = "AZLA Team"}]
 dependencies = [
   "pydantic>=2.8",
@@ -33,6 +37,13 @@ package = true
 dev-dependencies = ["pytest>=7.4"]
 scripts.main = "accelerate launch -m azla.cli --config configs/default.yaml --run train"
 scripts.infer = "python scripts/compare_infer.py"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["azla*"]
+exclude = ["tests*", "scripts*", "configs*", "datasets*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
