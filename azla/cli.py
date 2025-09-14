@@ -18,7 +18,7 @@ from .checkpoint import merge_and_save
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, required=True)
+    parser.add_argument("--config", type=str, default="configs/default.yaml")
     parser.add_argument("--run", type=str, choices=["smoke", "train"], default="smoke")
     args = parser.parse_args(argv)
     cfg = Config.load(args.config)

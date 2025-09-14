@@ -23,6 +23,8 @@ dependencies = [
 
 [project.scripts]
 azla = "azla.cli:main"
+main = "azla.cli:main"
+infer = "azla.infer_cli:main"
 
 [project.optional-dependencies]
 quantization = [
@@ -35,8 +37,6 @@ dev = [
 [tool.uv]
 package = true
 dev-dependencies = ["pytest>=7.4"]
-scripts.main = "accelerate launch -m azla.cli --config configs/default.yaml --run train"
-scripts.infer = "python scripts/compare_infer.py"
 
 [tool.setuptools]
 include-package-data = true
