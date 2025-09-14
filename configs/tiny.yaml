@@ -1,0 +1,43 @@
+model:
+  pretrained: sshleifer/tiny-gpt2
+  quantization_4bit: false
+  lora_r: 4
+  lora_alpha: 8
+  lora_dropout: 0.05
+  target_modules: [c_attn, c_proj]
+  max_length: 128
+  temperature: 0.8
+  top_k: 16
+  use_gradient_checkpointing: false
+mcts:
+  num_sims: 24
+  c_puct: 1.2
+  dirichlet_alpha: 0.3
+  dirichlet_frac: 0.25
+  progressive_widening_k: 1.0
+  progressive_widening_alpha: 0.5
+  root_top_k: 16
+curriculum:
+  enabled: true
+  window: 16
+  increase_threshold: 0.7
+  decrease_threshold: 0.4
+  max_sims: 64
+  min_sims: 8
+training:
+  batch_size: 1
+  mini_batch_size: 1
+  ppo_epochs: 1
+  learning_rate: 5e-5
+  kl_target: 0.05
+  seed: 123
+  steps: 1
+  rollout_steps: 1
+dataset:
+  path: datasets/sample.jsonl
+  field_prompt: prompt
+  max_samples: 1
+logging:
+  level: INFO
+  out_dir: runs
+
