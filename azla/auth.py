@@ -1,7 +1,21 @@
 import os
 
 
+def _load_dotenv() -> None:
+    try:
+        from dotenv import load_dotenv, find_dotenv
+
+        path = os.getenv("DOTENV_PATH") or find_dotenv(usecwd=True)
+        if path:
+            load_dotenv(path, override=False)
+        else:
+            load_dotenv(override=False)
+    except Exception:
+        pass
+
+
 def resolve_hf_token() -> str | None:
+    _load_dotenv()
     t = os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")
     if t:
         return t
@@ -30,4 +44,3 @@ def format_auth_error(model_id: str) -> str:
         f"Set 'HF_TOKEN' or 'HUGGING_FACE_HUB_TOKEN', or run 'uvx huggingface-cli login'. "
         f"Ensure access is granted on the model card."
     )
-
