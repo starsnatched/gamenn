@@ -1,6 +1,7 @@
 import argparse
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from azla.auth import resolve_hf_token, format_auth_error
 from trl import AutoModelForCausalLMWithValueHead
 
 
@@ -22,12 +23,28 @@ def main():
     parser.add_argument("--temperature", type=float, default=0.7)
     args = parser.parse_args()
     device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
-    tok = AutoTokenizer.from_pretrained(args.model_dir, use_fast=True)
+    token = resolve_hf_token()
+    tok_kwargs = {"use_fast": True}
+    if token:
+        tok_kwargs["token"] = token
     try:
-        model = AutoModelForCausalLMWithValueHead.from_pretrained(args.model_dir)
+        tok = AutoTokenizer.from_pretrained(args.model_dir, **tok_kwargs)
+    except Exception as e:
+        raise RuntimeError(format_auth_error(args.model_dir)) from e
+    try:
+        mdl_kwargs = {}
+        if token:
+            mdl_kwargs["token"] = token
+        model = AutoModelForCausalLMWithValueHead.from_pretrained(args.model_dir, **mdl_kwargs)
         gen_model = model.pretrained_model
     except Exception:
-        gen_model = AutoModelForCausalLM.from_pretrained(args.model_dir)
+        mdl_kwargs = {}
+        if token:
+            mdl_kwargs["token"] = token
+        try:
+            gen_model = AutoModelForCausalLM.from_pretrained(args.model_dir, **mdl_kwargs)
+        except Exception as e:
+            raise RuntimeError(format_auth_error(args.model_dir)) from e
     gen_model.to(device)
     gen_model.eval()
     inputs = build_inputs(tok, args.prompt, device)
@@ -45,4 +62,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

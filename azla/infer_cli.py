@@ -3,6 +3,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from trl import AutoModelForCausalLMWithValueHead
 from .config import Config
+from .auth import resolve_hf_token, format_auth_error
 
 
 def build_inputs(tokenizer, prompt: str, device: str):
@@ -16,16 +17,32 @@ def build_inputs(tokenizer, prompt: str, device: str):
 
 
 def load_model(model_id: str, prefer_value_head: bool = True):
-    tok = AutoTokenizer.from_pretrained(model_id, use_fast=True)
+    token = resolve_hf_token()
+    tok_kwargs = {"use_fast": True}
+    if token:
+        tok_kwargs["token"] = token
+    try:
+        tok = AutoTokenizer.from_pretrained(model_id, **tok_kwargs)
+    except Exception as e:
+        raise RuntimeError(format_auth_error(model_id)) from e
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
     if prefer_value_head:
         try:
-            model = AutoModelForCausalLMWithValueHead.from_pretrained(model_id)
+            mdl_kwargs = {}
+            if token:
+                mdl_kwargs["token"] = token
+            model = AutoModelForCausalLMWithValueHead.from_pretrained(model_id, **mdl_kwargs)
             return tok, model.pretrained_model
         except Exception:
             pass
-    model = AutoModelForCausalLM.from_pretrained(model_id)
+    mdl_kwargs = {}
+    if token:
+        mdl_kwargs["token"] = token
+    try:
+        model = AutoModelForCausalLM.from_pretrained(model_id, **mdl_kwargs)
+    except Exception as e:
+        raise RuntimeError(format_auth_error(model_id)) from e
     return tok, model
 
 
@@ -78,4 +95,3 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
-

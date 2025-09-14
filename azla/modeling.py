@@ -2,6 +2,7 @@ from typing import Dict, List, Tuple, Optional
 import contextlib
 
 from .utils import detect_device, to_device
+from .auth import resolve_hf_token, format_auth_error
 
 
 class ModelManager:
@@ -45,10 +46,23 @@ class ModelManager:
                 ),
                 "device_map": "auto",
             }
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, use_fast=True)
+        token = resolve_hf_token()
+        tok_kwargs = {"use_fast": True}
+        if token:
+            tok_kwargs["token"] = token
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, **tok_kwargs)
+        except Exception as e:
+            raise RuntimeError(format_auth_error(self.model_name)) from e
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
-        self.model = AutoModelForCausalLMWithValueHead.from_pretrained(self.model_name, **quant_args)
+        mdl_kwargs = dict(quant_args)
+        if token:
+            mdl_kwargs["token"] = token
+        try:
+            self.model = AutoModelForCausalLMWithValueHead.from_pretrained(self.model_name, **mdl_kwargs)
+        except Exception as e:
+            raise RuntimeError(format_auth_error(self.model_name)) from e
         if self.use_gradient_checkpointing:
             try:
                 self.model.pretrained_model.gradient_checkpointing_enable()
@@ -105,4 +119,3 @@ class ModelManager:
 
     def decode(self, ids: List[int]) -> str:
         return self.tokenizer.decode(ids, skip_special_tokens=True)
-
